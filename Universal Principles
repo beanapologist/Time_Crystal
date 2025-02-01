@@ -1,0 +1,235 @@
+import numpy as np # type: ignore
+import torch # type: ignore
+import torch.nn as nn # type: ignore
+import torch.nn.functional as F # type: ignore
+from typing import Dict, List, Tuple, Optional
+from dataclasses import dataclass
+
+@dataclass
+class CosmicConfig:
+    """Configuration for cosmic calculations"""
+    phi: float = (1 + np.sqrt(5)) / 2  # Golden ratio
+    c: float = 299792458  # Speed of light
+    G: float = 6.67430e-11  # Gravitational constant
+    h_bar: float = 1.054571817e-34  # Planck constant
+    current_dark_energy: float = 0.683
+    current_dark_matter: float = 0.268
+    current_matter: float = 0.049
+    current_coherence: float = 0.938324
+    batch_size: int = 32  # Added batch size control
+    cache_size: int = 1024  # Added cache size limit
+
+class PrimeFractalOptimizer(nn.Module):
+    """Prime fractal optimizer with memory management"""
+    
+    def __init__(self, config: CosmicConfig):
+        super().__init__()
+        self.config = config
+        
+        # Fixed dimensions that ensure proper alignment
+        self.embedding_dim = 256
+        self.hidden_dim = 128
+        self.output_dim = 64
+        
+        # Generate prime embedding with exact size needed
+        self.prime_embedding = nn.Parameter(self._generate_prime_embedding(self.embedding_dim))
+        
+        # Ensure layers match embedding dimensions exactly
+        self.quantum_layer = nn.Linear(self.embedding_dim, self.hidden_dim)
+        self.fractal_layer = nn.Linear(self.hidden_dim, self.output_dim)
+        self.coherence_layer = nn.Linear(self.output_dim, 1)
+        
+        # Cache for computed values
+        self.cache = {}
+        self.cache_order = []
+
+    def _generate_prime_embedding(self, size: int) -> torch.Tensor:
+        """Generate prime number based embedding with exact size control"""
+        primes = []
+        n = 2
+        while len(primes) < size + 1:  # Get one extra prime for gap calculation
+            if self._is_prime(n):
+                primes.append(n)
+            n += 1
+        
+        # Calculate gaps and ensure exact size
+        prime_gaps = np.diff(primes)[:size]  # Take exact number of gaps needed
+        embedding = torch.tensor(prime_gaps, dtype=torch.float32)
+        return F.normalize(embedding, p=2, dim=0)
+
+    @staticmethod
+    def _is_prime(n: int) -> bool:
+        """Optimized primality test"""
+        if n < 2:
+            return False
+        if n == 2:
+            return True
+        if n % 2 == 0:
+            return False
+        for i in range(3, int(np.sqrt(n)) + 1, 2):
+            if n % i == 0:
+                return False
+        return True
+
+    def _manage_cache(self, key: str, value: torch.Tensor):
+        """Manage cache size"""
+        if key in self.cache:
+            return
+            
+        if len(self.cache) >= self.config.cache_size:
+            # Remove oldest entry
+            old_key = self.cache_order.pop(0)
+            del self.cache[old_key]
+            
+        self.cache[key] = value.detach()
+        self.cache_order.append(key)
+
+    def compute_quantum_transition(self, t: torch.Tensor) -> torch.Tensor:
+        """Memory-optimized quantum coherence computation"""
+        # Use batching for large inputs
+        batch_size = self.config.batch_size
+        if t.size(0) > batch_size:
+            coherence_list = []
+            for i in range(0, t.size(0), batch_size):
+                batch = t[i:i + batch_size]
+                coherence_list.append(self._compute_batch_transition(batch))
+            return torch.cat(coherence_list, dim=0)
+        
+        return self._compute_batch_transition(t)
+
+    def _compute_batch_transition(self, t: torch.Tensor) -> torch.Tensor:
+        """Compute transition for a single batch"""
+        cache_key = f"transition_{hash(t.cpu().numpy().tobytes())}"
+        
+        if cache_key in self.cache:
+            return self.cache[cache_key]
+            
+        t_norm = F.normalize(t.view(-1, 1), p=2, dim=0)
+        
+        # Ensure proper dimension expansion and alignment
+        batch_size = t_norm.size(0)
+        x = self.prime_embedding.unsqueeze(0).expand(batch_size, -1)  # [batch_size, embedding_dim-1]
+        x = F.silu(self.quantum_layer(x))  # [batch_size, 128]
+        x = torch.tanh(self.fractal_layer(x) * self.config.phi)  # [batch_size, 64]
+        coherence = torch.sigmoid(self.coherence_layer(x))  # [batch_size, 1]
+        
+        self._manage_cache(cache_key, coherence)
+        return coherence
+
+    def optimize_cosmic_transition(self, t: torch.Tensor, 
+                                 dark_energy: torch.Tensor,
+                                 dark_matter: torch.Tensor,
+                                 matter: torch.Tensor) -> Tuple[torch.Tensor, Dict[str, float]]:
+        """Memory-optimized cosmic transition"""
+        coherence = self.compute_quantum_transition(t)
+        
+        # Squeeze coherence to remove the singleton dimension
+        coherence = coherence.squeeze(1)  # Now shape is [batch_size]
+        
+        # Compute corrections efficiently
+        fractal_pattern = torch.cos(t * self.config.phi) * torch.sin(t / self.config.phi)  # [batch_size]
+        dark_energy_factor = 1 - torch.abs(dark_energy - self.config.current_dark_energy)  # [batch_size]
+        matter_factor = 1 - torch.abs(matter + dark_matter - 
+                                    (self.config.current_matter + self.config.current_dark_matter))  # [batch_size]
+        
+        # Combine corrections
+        coherence = coherence * dark_energy_factor * matter_factor * (1 + fractal_pattern * 0.1)  # [batch_size]
+        coherence = torch.clamp(coherence, 0, 1)  # [batch_size]
+        
+        metrics = {
+            'phase_stability': float(torch.cos(t * self.config.phi).mean().item()),
+            'fractal_alignment': float(fractal_pattern.mean().item()),
+            'energy_coupling': float(dark_energy_factor.mean().item()),
+            'matter_coupling': float(matter_factor.mean().item())
+        }
+        
+        return coherence, metrics
+
+class CosmicEvolutionCalculator:
+    """Memory-optimized cosmic evolution calculator"""
+    
+    def __init__(self, config: Optional[CosmicConfig] = None):
+        self.config = config or CosmicConfig()
+        self.optimizer = PrimeFractalOptimizer(self.config)
+
+    @torch.no_grad()
+    def calculate_evolution(self, time_range: np.ndarray) -> Tuple[np.ndarray, ...]:
+        """Calculate evolution with batched processing"""
+        t = torch.from_numpy(time_range).float()
+        
+        # Pre-allocate arrays
+        results = np.zeros((4, len(time_range)), dtype=np.float32)
+        present_day_idx = np.abs(time_range - 17.64).argmin()
+        
+        # Process in batches
+        batch_size = self.config.batch_size
+        for i in range(0, len(time_range), batch_size):
+            batch_slice = slice(i, min(i + batch_size, len(time_range)))
+            batch_time = time_range[batch_slice]
+            
+            # Calculate batch evolution
+            self._calculate_batch_evolution(
+                batch_time,
+                batch_slice,
+                present_day_idx,
+                time_range[present_day_idx],
+                results
+            )
+        
+        return tuple(results[i, :] for i in range(4))
+
+    def _calculate_batch_evolution(self, batch_time: np.ndarray, 
+                                 batch_slice: slice,
+                                 present_day_idx: int,
+                                 present_day_time: float,
+                                 results: np.ndarray):
+        """Process evolution for a single batch"""
+        scale_factors = np.exp((batch_time - present_day_time) / 3)
+        past_mask = batch_time <= present_day_time
+        
+        # Vectorized calculations for past and future
+        scaling_past = np.power(scale_factors[past_mask], -3)
+        scaling_future = np.power(scale_factors[~past_mask], 3)
+        
+        # Calculate components
+        results[0, batch_slice][past_mask] = self.config.current_dark_energy / scaling_past
+        results[1, batch_slice][past_mask] = self.config.current_dark_matter * scaling_past
+        results[2, batch_slice][past_mask] = self.config.current_matter * scaling_past
+        
+        results[0, batch_slice][~past_mask] = self.config.current_dark_energy * scaling_future
+        results[1, batch_slice][~past_mask] = self.config.current_dark_matter
+        results[2, batch_slice][~past_mask] = self.config.current_matter
+        
+        # Normalize
+        totals = results[0:3, batch_slice].sum(axis=0)
+        results[0:3, batch_slice] /= totals
+        
+        # Compute quantum phase with proper shape handling
+        batch_tensor = torch.tensor(batch_time).float()
+        coherence, _ = self.optimizer.optimize_cosmic_transition(
+            batch_tensor,
+            torch.tensor(results[0, batch_slice]).float(),
+            torch.tensor(results[1, batch_slice]).float(),
+            torch.tensor(results[2, batch_slice]).float()
+        )
+        # Ensure correct shape before assignment
+        results[3, batch_slice] = coherence.numpy()  # coherence is already squeezed to [batch_size]
+
+def analyze_cosmic_transitions():
+    """Analyze cosmic transitions with memory optimization"""
+    calculator = CosmicEvolutionCalculator()
+    time_range = np.linspace(-43, 100, 1000)
+    
+    results = calculator.calculate_evolution(time_range)
+    present_idx = np.abs(time_range - 17.64).argmin()
+    
+    # Print results
+    components = ['Dark Energy', 'Dark Matter', 'Matter', 'Quantum Coherence']
+    print("\nCurrent Universe State:")
+    for component, value in zip(components, [r[present_idx] for r in results]):
+        print(f"{component}: {value:.4%}")
+    
+    return (time_range,) + results
+
+if __name__ == "__main__":
+    analyze_cosmic_transitions()

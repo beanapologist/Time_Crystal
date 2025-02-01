@@ -1,0 +1,31 @@
+{
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingImports": "warning",
+        "reportMissingModuleSource": "warning",
+        "reportUnusedImport": "information",
+        "reportUnusedVariable": "information",
+        "reportUndefinedVariable": "error",
+        "reportDuplicateImport": "warning",
+        "reportGeneralTypeIssues": "warning",
+        "reportOptionalMemberAccess": "information",
+        "reportOptionalSubscript": "information",
+        "reportPrivateImportUsage": "warning",
+        "reportUnboundVariable": "error",
+        "reportUnusedClass": "information",
+        "reportUnusedFunction": "information",
+        "reportWildcardImportFromLibrary": "warning",
+        "reportConstantRedefinition": "warning",
+        "reportIncompatibleMethodOverride": "error",
+        "reportInvalidStringEscapeSequence": "error",
+        "reportInvalidTypeVarUse": "error",
+        "reportMissingTypeStubs": "warning",
+        "reportSelfClsParameterName": "warning"
+    },
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.extraPaths": [
+        "./quantum_system",
+        "./language_model",
+        "./data_processing"
+    ]
+} 

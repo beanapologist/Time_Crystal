@@ -1,0 +1,24 @@
+{
+  "name": "time-crystal",
+  "version": "1.0.0",
+  "description": "Time Crystal Quantum Computing System",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "plotly.js": "^2.24.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.22.5",
+    "@babel/preset-react": "^7.22.5",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "author": "",
+  "license": "ISC"
+} 
